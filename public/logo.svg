@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="32" y2="32">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="iconGradient" x1="16" y1="8" x2="16" y2="24">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E5E7EB"/>
+    </linearGradient>
+    <filter id="shadow" x="-2" y="-2" width="36" height="36">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <g filter="url(#shadow)">
+    <rect width="32" height="32" rx="8" fill="url(#bgGradient)"/>
+  </g>
+  
+  <path d="M8 16C8 11.5817 11.5817 8 16 8C20.4183 8 24 11.5817 24 16C24 20.4183 20.4183 24 16 24" 
+        stroke="url(#iconGradient)" 
+        stroke-width="2.5" 
+        stroke-linecap="round"/>
+  <path d="M16 8V16L20 12" 
+        stroke="url(#iconGradient)" 
+        stroke-width="2.5" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+  
+  <circle cx="24" cy="8" r="2" fill="#FFFFFF" fill-opacity="0.3"/>
+  <circle cx="8" cy="24" r="2" fill="#FFFFFF" fill-opacity="0.1"/>
+</svg>
