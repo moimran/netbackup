@@ -1,0 +1,25 @@
+I want to build a solution which can backup configuration of  network devices using SSH, scp, telnet. The initial goal will be to build a UI that uses rest to call the backend. The UI should be something like ADMIN LTE, the UI should have ability to per form CRUD operations of USERS who will manage the solution. There should be CRUD for network device information. The information will be stored in the form of the table which is searchable.They should also be relevant forms to take information.
+
+Use Vite and and reactJS to build this solution. Implement only the UI part, we will build separate backend to interact with database and ssh connections. THE UI should have ability to do rest calls to the backend. Add good amount of comments to understand and manage code. Use latest libraries and technologies. Ask for approval for the libraries you want to use to build this solution.
+
+I would like to create a new functionality in this project, the name of the new functionality is networkMap, the user will have ability to create network diagrams.
+
+The user should be able to drag and drop devices based on the devices added from device table, use the SVG icons from the @net_icons folder,
+
+Under the networkMap the user has ability to perform CRUD operation on the network diagram. every new diagram should internally create a configuration file in a folder. This configuration file will track the coordinates of every network device and its cable connectivity to another device.
+
+
+for example on the UI I click on networkMap create a new network diagram, which will appear a diagram playground, up there will be a search bar where I can search for network device from the device table 
+
+
+In the @databriker folder create rest microservicesto peform crud operations of avrious UI tables which can be refrenced from @fronend/src folder. use python as language, use following libraries
+
+1. pydantic
+2. sqlalchemy
+3. fastapi
+4. uvicorn
+
+use the sqlite as backend, in future we can switch to postgres.
+
+once you build rest services create openapi and documentation for the same. ALso adjust the front end code to utlise the backend rest api to query and show the data in UI. remove the mock data
+from the front end and replace with data from backend. FOllow all python best practices to write the code, use proper comments, add logging, handle exceptions, etc.
