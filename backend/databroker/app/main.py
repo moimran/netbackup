@@ -8,6 +8,7 @@ from .routers import (
     locations,
     device_credentials,
     dashboard,
+    admins,
 )
 from .database import Base, engine
 import logging
@@ -45,6 +46,7 @@ app.include_router(sites.router)
 app.include_router(locations.router)
 app.include_router(device_credentials.router)
 app.include_router(dashboard.router)
+app.include_router(admins.router)
 
 @app.get("/")
 async def root():

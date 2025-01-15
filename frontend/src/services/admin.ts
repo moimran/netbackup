@@ -1,24 +1,45 @@
 import api from './api';
 import { Admin } from '../types';
 
+export interface AdminCreate {
+  username: string;
+  email: string;
+  password: string;
+  role: 'admin' | 'super_admin';
+  status: 'active' | 'inactive';
+}
+
+export interface AdminUpdate {
+  username?: string;
+  email?: string;
+  password?: string;
+  role?: 'admin' | 'super_admin';
+  status?: 'active' | 'inactive';
+}
+
 const adminService = {
-  getAll: async (): Promise<Admin[]> => {
-    const response = await api.get<Admin[]>('/api/admin/users');
+  getAll: async (skip: number = 0, limit: number = 100): Promise<Admin[]> => {
+    const response = await api.get<Admin[]>(`/api/admins?skip=${skip}&limit=${limit}`);
     return response.data;
   },
 
-  create: async (admin: Omit<Admin, 'id' | 'created_at' | 'updated_at'>): Promise<Admin> => {
-    const response = await api.post<Admin>('/api/admin/users', admin);
+  getById: async (id: string): Promise<Admin> => {
+    const response = await api.get<Admin>(`/api/admins/${id}`);
     return response.data;
   },
 
-  update: async (id: string, admin: Partial<Admin>): Promise<Admin> => {
-    const response = await api.put<Admin>(`/api/admin/users/${id}`, admin);
+  create: async (admin: AdminCreate): Promise<Admin> => {
+    const response = await api.post<Admin>('/api/admins', admin);
+    return response.data;
+  },
+
+  update: async (id: string, admin: AdminUpdate): Promise<Admin> => {
+    const response = await api.put<Admin>(`/api/admins/${id}`, admin);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await api.delete(`/api/admin/users/${id}`);
+    await api.delete(`/api/admins/${id}`);
   },
 };
 

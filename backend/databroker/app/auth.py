@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from .models.admin import Admin
 from sqlalchemy.orm import Session
+from .database import get_db
 import logging
 
 # JWT Configuration
@@ -25,7 +26,12 @@ def get_password_hash(password: str) -> str:
 
 def authenticate_admin(username: str, password: str) -> Optional[Admin]:
     if username == "superadmin" and password == "superadmin":
-        return Admin(username="superadmin", role="admin")
+        return Admin(
+            username="superadmin",
+            email="superadmin@example.com",
+            password=password,
+            role="admin"
+        )
     return None
 
 def create_access_token(data: dict) -> str:
@@ -45,7 +51,7 @@ def verify_token(token: str) -> Optional[dict]:
     except JWTError:
         return None
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> Admin:
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Admin:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -58,13 +64,23 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Admin:
         if username is None:
             raise credentials_exception
             
-        # For superadmin, create a new Admin instance
-        if username == "superadmin":
-            return Admin(username="superadmin", role="admin")
+        # Get admin from database
+        admin = db.query(Admin).filter(Admin.username == username).first()
+        if admin is None:
+            raise credentials_exception
             
-        raise credentials_exception
+        return admin
     except JWTError:
         raise credentials_exception
+
+async def get_current_admin(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Admin:
+    admin = await get_current_user(token, db)
+    if admin.role not in ["admin", "super_admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User does not have admin privileges"
+        )
+    return admin
 
 def check_admin_permission(min_role: str = "read_only"):
     async def check_permission(current_user: Admin = Depends(get_current_user)) -> Admin:

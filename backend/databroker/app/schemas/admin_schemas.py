@@ -1,28 +1,37 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
+from enum import Enum
 
-class AdminRole(str):
+class AdminRole(str, Enum):
     READ_ONLY = "read_only"
     ADMIN = "admin"
     SUPER_ADMIN = "super_admin"
 
-class AdminStatus(str):
+class AdminStatus(str, Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
 
 class AdminBase(BaseModel):
     username: str
-    role: str
+    email: EmailStr
+    role: AdminRole = AdminRole.ADMIN
+    status: AdminStatus = AdminStatus.ACTIVE
 
 class AdminCreate(AdminBase):
     password: str
 
+class AdminUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    role: Optional[AdminRole] = None
+    status: Optional[AdminStatus] = None
+
 class Admin(AdminBase):
-    id: int
-    status: str
-    created_at: Optional[datetime] = None
-    last_login: Optional[datetime] = None
+    id: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

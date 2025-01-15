@@ -23,7 +23,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_admin(
     admin: AdminCreate,
     db: Session = Depends(get_db),
-    current_admin: Admin = Depends(lambda: check_admin_permission(min_role=AdminRole.SUPER_ADMIN))
+    current_admin: Admin = Depends(lambda: check_admin_permission(min_role=AdminRole.SUPER_ADMIN.value))
 ):
     db_admin = db.query(Admin).filter(Admin.username == admin.username).first()
     if db_admin:
@@ -38,8 +38,8 @@ def create_admin(
         username=admin.username,
         email=admin.email,
         password=hashed_password,
-        role=admin.role,
-        status=admin.status
+        role=admin.role.value if hasattr(admin.role, 'value') else admin.role,
+        status=admin.status.value if hasattr(admin.status, 'value') else admin.status
     )
     
     db.add(db_admin)
@@ -55,7 +55,13 @@ def get_admins(
     _: Admin = Depends(lambda: check_admin_permission(min_role=AdminRole.READ_ONLY))
 ):
     try:
+        from datetime import datetime
         admins = db.query(Admin).offset(skip).limit(limit).all()
+        # Set default created_at for existing records
+        for admin in admins:
+            if admin.created_at is None:
+                admin.created_at = datetime.utcnow()
+        db.commit()
         return admins
     except Exception as e:
         logger.error(f"Error fetching admins: {str(e)}")

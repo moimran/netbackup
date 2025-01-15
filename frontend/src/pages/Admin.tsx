@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { CustomTable } from '../components/CustomTable';
-import adminService from '../services/admin';
+import adminService, { AdminCreate, AdminUpdate } from '../services/admin';
 import { Admin } from '../types';
 
 const AdminPage: React.FC = () => {
@@ -35,13 +35,13 @@ const AdminPage: React.FC = () => {
 
   // Queries
   const { data: admins = [], isLoading } = useQuery({
-    queryKey: ['admins'],
-    queryFn: adminService.getAll,
+    queryKey: ['admins', 0, 100],
+    queryFn: () => adminService.getAll(0, 100),
   });
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: adminService.create,
+    mutationFn: (data: AdminCreate) => adminService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admins'] });
       setSuccessMessage('Admin created successfully');
@@ -50,7 +50,7 @@ const AdminPage: React.FC = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Admin> }) =>
+    mutationFn: ({ id, data }: { id: string; data: AdminUpdate }) =>
       adminService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admins'] });
@@ -114,7 +114,11 @@ const AdminPage: React.FC = () => {
         data: adminData,
       });
     } else {
-      createMutation.mutate(adminData as any);
+      if (!formData.password) {
+        alert('Password is required for new admin');
+        return;
+      }
+      createMutation.mutate(adminData as AdminCreate);
     }
   };
 
