@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { CustomTable } from '../components/CustomTable';
 import DeviceDialog from '../components/DeviceDialog';
+import TableHeader from '../components/TableHeader';
 import {
   Button,
   Card,
@@ -71,20 +72,7 @@ const DevicesPage: React.FC = () => {
     isLoading: isLoadingCredentials,
   } = useQuery({
     queryKey: ['deviceCredentials'],
-    queryFn: async () => {
-      if (!devices) return [];
-      const credentialsList = await Promise.all(
-        devices.map(async (device) => {
-          try {
-            return await deviceCredentialsService.getCredentials(device.id);
-          } catch (error) {
-            return null;
-          }
-        })
-      );
-      return credentialsList.filter((cred): cred is DeviceCredential => cred !== null);
-    },
-    enabled: !!devices,
+    queryFn: deviceCredentialsService.getAll,
   });
 
   const createMutation = useMutation({
@@ -114,6 +102,15 @@ const DevicesPage: React.FC = () => {
     },
   });
 
+  const addToGroupMutation = useMutation({
+    mutationFn: ({ groupId, deviceId }: { groupId: string; deviceId: string }) =>
+      deviceGroupsService.addDevice(groupId, deviceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deviceGroups'] });
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+    },
+  });
+
   const handleAdd = () => {
     setSelectedDevice(null);
     setDialogOpen(true);
@@ -136,13 +133,49 @@ const DevicesPage: React.FC = () => {
   };
 
   const handleSave = async (deviceData: Partial<Device>) => {
-    if (selectedDevice) {
-      updateMutation.mutate({
-        id: selectedDevice.id,
-        data: deviceData,
-      });
-    } else {
-      createMutation.mutate(deviceData as Device);
+    try {
+      if (selectedDevice) {
+        // Update device
+        await updateMutation.mutateAsync({
+          id: selectedDevice.id,
+          data: deviceData,
+        });
+
+        // Handle group changes
+        const oldGroups = selectedDevice.groups || [];
+        const newGroups = deviceData.groups || [];
+        
+        // Add device to new groups
+        const groupsToAdd = newGroups.filter(
+          newGroup => !oldGroups.some(oldGroup => oldGroup.id === newGroup.id)
+        );
+        
+        for (const group of groupsToAdd) {
+          await addToGroupMutation.mutateAsync({
+            groupId: group.id,
+            deviceId: selectedDevice.id,
+          });
+        }
+      } else {
+        // Create new device
+        const createdDevice = await createMutation.mutateAsync(deviceData as Device);
+        
+        // Add device to selected groups
+        if (deviceData.groups) {
+          for (const group of deviceData.groups) {
+            await addToGroupMutation.mutateAsync({
+              groupId: group.id,
+              deviceId: createdDevice.id,
+            });
+          }
+        }
+      }
+
+      setSuccessMessage(selectedDevice ? 'Device updated successfully' : 'Device created successfully');
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Error saving device:', error);
+      setSuccessMessage('Error saving device. Please try again.');
     }
   };
 
@@ -171,19 +204,26 @@ const DevicesPage: React.FC = () => {
       id: 'site',
       label: 'Site',
       minWidth: 170,
-      format: (value?: Site) => value?.name || '-',
+      format: (_, row: Device) => {
+        if (row.site?.name) return row.site.name;
+        const site = sites.find(s => s.id === row.site_id);
+        return site?.name || '-';
+      },
+    },
+    {
+      id: 'groups',
+      label: 'Device Groups',
+      minWidth: 170,
+      format: (value: DeviceGroup[]) => 
+        value && value.length > 0 
+          ? value.map(group => group.name).join(', ') 
+          : '-',
     },
     {
       id: 'location',
       label: 'Location',
       minWidth: 170,
-      format: (value?: Location) => value?.name || '-',
-    },
-    {
-      id: 'device_group',
-      label: 'Device Group',
-      minWidth: 170,
-      format: (value?: DeviceGroup) => value?.name || '-',
+      format: (value: Location) => value?.name || '-',
     },
   ];
 
@@ -204,55 +244,48 @@ const DevicesPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <Typography variant="h5" className="font-semibold mb-1">
-            Devices
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Manage your network devices
-          </Typography>
-        </div>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          Add Device
-        </Button>
-      </div>
-
-      {/* Device Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card 
-          className={`p-4 rounded-xl hover:shadow-md transition-shadow duration-200 ${
-            theme.palette.mode === 'dark' 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border border-gray-200'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <RouterIcon className="text-blue-500" />
-            <Typography variant="h6" className="font-medium">
-              Total Devices
-            </Typography>
-          </div>
-          <Typography variant="h4" className="font-bold text-blue-600">
-            {devices.length}
-          </Typography>
-        </Card>
-      </div>
-
-      <CustomTable<Device>
-        columns={columns}
-        rows={devices}
-        loading={isLoadingDevices}
-        actions
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+    <Box sx={{ p: 3 }}>
+      <TableHeader
+        title="Network Devices"
+        subtitle="Manage and monitor your network devices across all locations"
+        stats={[
+          {
+            label: "Total Devices",
+            value: devices.length,
+            color: "primary"
+          },
+          {
+            label: "Active",
+            value: devices.filter(d => d.status === DeviceStatus.Active).length,
+            color: "success"
+          },
+          {
+            label: "Inactive",
+            value: devices.filter(d => d.status === DeviceStatus.Inactive).length,
+            color: "error"
+          }
+        ]}
+        onAdd={() => setDialogOpen(true)}
+        addButtonLabel="Add Device"
       />
+
+      <Card
+        sx={{
+          overflow: 'hidden',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+            : '0 4px 20px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <CustomTable<Device>
+          columns={columns}
+          rows={devices}
+          loading={isLoadingDevices}
+          actions
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </Card>
 
       {dialogOpen && (
         <DeviceDialog
@@ -262,7 +295,8 @@ const DevicesPage: React.FC = () => {
           onSave={handleSave}
           sites={sites}
           locations={locations}
-          deviceGroups={deviceGroups}
+          groups={deviceGroups}
+          credentials={deviceCredentials}
         />
       )}
 
@@ -276,7 +310,7 @@ const DevicesPage: React.FC = () => {
           {successMessage}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 

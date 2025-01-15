@@ -16,15 +16,15 @@ import { DEVICE_TYPE_CONFIG, STATUS_CONFIG } from '../constants';
 interface DeviceDialogProps {
   open: boolean;
   onClose: () => void;
-  device?: Device;
+  device?: Device | null;
   sites: Site[];
   locations: Location[];
   groups: DeviceGroup[];
   credentials: DeviceCredential[];
-  onSave: (deviceData: Omit<Device, 'id'>) => void;
+  onSave: (deviceData: Partial<Device>) => void;
 }
 
-const initialDeviceState: Omit<Device, 'id'> = {
+const initialDeviceState: Partial<Device> = {
   name: '',
   ip_address: '',
   type: DeviceType.SWITCH,
@@ -32,6 +32,8 @@ const initialDeviceState: Omit<Device, 'id'> = {
   site_id: '',
   location_id: '',
   credential_id: '',
+  groups: [],
+  group_ids: [],
   config: {},
 };
 
@@ -39,19 +41,36 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
   open,
   onClose,
   device,
-  sites,
-  locations,
-  groups,
-  credentials,
+  sites = [],
+  locations = [],
+  groups = [],
+  credentials = [],
   onSave,
 }) => {
-  const [formData, setFormData] = useState<Omit<Device, 'id'>>(initialDeviceState);
+  const [formData, setFormData] = useState(
+    device 
+      ? {
+          ...device,
+          groups: device.groups || [],
+          group_ids: device.groups?.map(g => g.id) || [],
+          // Validate credential_id exists in available credentials
+          credential_id: credentials.some(c => c.id === device.credential_id) 
+            ? device.credential_id 
+            : '',
+        }
+      : initialDeviceState
+  );
 
   useEffect(() => {
     if (device) {
-      // Create a copy of device without the id field
-      const { id, ...deviceWithoutId } = device;
-      setFormData(deviceWithoutId);
+      setFormData({
+        ...device,
+        groups: device.groups || [],
+        group_ids: device.groups?.map(g => g.id) || [],
+        credential_id: credentials.some(c => c.id === device.credential_id) 
+          ? device.credential_id 
+          : '',
+      });
     } else {
       setFormData(initialDeviceState);
     }
@@ -63,7 +82,11 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
   };
 
   const handleGroupChange = (_: any, newGroups: DeviceGroup[]) => {
-    setFormData((prev) => ({ ...prev, groups: newGroups }));
+    setFormData((prev) => ({
+      ...prev,
+      groups: newGroups,
+      group_ids: newGroups.map(g => g.id)
+    }));
   };
 
   const handleSubmit = () => {
@@ -71,7 +94,7 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
   };
 
   const filteredLocations = locations.filter(
-    (location) => location.site_id === formData.site_id
+    (location) => !formData.site_id || location.site_id === formData.site_id
   );
 
   return (
@@ -83,7 +106,7 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
             fullWidth
             label="Device Name"
             name="name"
-            value={formData.name}
+            value={formData.name || ''}
             onChange={handleChange}
             required
           />
@@ -91,7 +114,7 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
             fullWidth
             label="IP Address"
             name="ip_address"
-            value={formData.ip_address}
+            value={formData.ip_address || ''}
             onChange={handleChange}
             required
           />
@@ -100,13 +123,13 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
             select
             label="Device Type"
             name="type"
-            value={formData.type}
+            value={formData.type || DeviceType.SWITCH}
             onChange={handleChange}
             required
           >
             {Object.values(DeviceType).map((type) => (
               <MenuItem key={type} value={type}>
-                {type}
+                {DEVICE_TYPE_CONFIG[type]?.label || type}
               </MenuItem>
             ))}
           </TextField>
@@ -115,13 +138,13 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
             select
             label="Status"
             name="status"
-            value={formData.status}
+            value={formData.status || DeviceStatus.INACTIVE}
             onChange={handleChange}
             required
           >
             {Object.values(DeviceStatus).map((status) => (
               <MenuItem key={status} value={status}>
-                {status}
+                {STATUS_CONFIG[status]?.label || status}
               </MenuItem>
             ))}
           </TextField>
@@ -130,7 +153,7 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
             select
             label="Site"
             name="site_id"
-            value={formData.site_id}
+            value={formData.site_id || ''}
             onChange={handleChange}
           >
             <MenuItem value="">
@@ -147,7 +170,7 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
             select
             label="Location"
             name="location_id"
-            value={formData.location_id}
+            value={formData.location_id || ''}
             onChange={handleChange}
             disabled={!formData.site_id}
           >
@@ -166,6 +189,7 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
             value={formData.groups || []}
             onChange={handleGroupChange}
             getOptionLabel={(option) => option.name}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
             renderTags={(tagValue, getTagProps) =>
               tagValue.map((option, index) => (
                 <Chip
@@ -183,9 +207,9 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
           <TextField
             fullWidth
             select
-            label="Credential"
+            label="Device Credentials"
             name="credential_id"
-            value={formData.credential_id}
+            value={formData.credential_id || ''}
             onChange={handleChange}
           >
             <MenuItem value="">
@@ -201,12 +225,8 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-        >
-          Save
+        <Button onClick={handleSubmit} variant="contained" color="primary">
+          {device ? 'Update' : 'Create'}
         </Button>
       </DialogActions>
     </Dialog>

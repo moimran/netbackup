@@ -71,6 +71,10 @@ export interface Location extends BaseEntity {
 
 export interface DeviceGroup extends BaseEntity {
   devices?: Device[];
+  credential_id?: ID;
+  credential?: DeviceCredential;
+  color?: string;
+  isDefault?: boolean;
 }
 
 export interface DeviceCredential extends BaseEntity {

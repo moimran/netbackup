@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { CustomTable } from '../components/CustomTable';
 import LocationDialog from '../components/LocationDialog';
+import TableHeader from '../components/TableHeader';
 import {
   Button,
   Card,
@@ -139,55 +140,43 @@ const LocationsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <Typography variant="h5" className="font-semibold mb-1">
-            Locations
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Manage your network locations
-          </Typography>
-        </div>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          Add Location
-        </Button>
-      </div>
-
-      {/* Location Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card 
-          className={`p-4 rounded-xl hover:shadow-md transition-shadow duration-200 ${
-            theme.palette.mode === 'dark' 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border border-gray-200'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <LocationIcon className="text-blue-500" />
-            <Typography variant="h6" className="font-medium">
-              Total Locations
-            </Typography>
-          </div>
-          <Typography variant="h4" className="font-bold text-blue-600">
-            {locations.length}
-          </Typography>
-        </Card>
-      </div>
-
-      <CustomTable<Location>
-        columns={columns}
-        rows={locations}
-        loading={isLoadingLocations}
-        actions
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+    <Box sx={{ p: 3 }}>
+      <TableHeader
+        title="Network Locations"
+        subtitle="Manage physical locations of your network infrastructure"
+        stats={[
+          {
+            label: "Total Locations",
+            value: locations.length,
+            color: "primary"
+          },
+          {
+            label: "Active",
+            value: locations.filter(l => l.status === 'active').length,
+            color: "success"
+          }
+        ]}
+        onAdd={handleAdd}
+        addButtonLabel="Add Location"
       />
+
+      <Card
+        sx={{
+          overflow: 'hidden',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+            : '0 4px 20px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <CustomTable<Location>
+          columns={columns}
+          rows={locations}
+          loading={isLoadingLocations}
+          actions
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </Card>
 
       {dialogOpen && (
         <LocationDialog
@@ -209,7 +198,7 @@ const LocationsPage: React.FC = () => {
           {successMessage}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 

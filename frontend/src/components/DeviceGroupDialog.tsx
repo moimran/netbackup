@@ -7,14 +7,15 @@ import {
   Button,
   TextField,
   Box,
+  MenuItem,
 } from '@mui/material';
 import { DeviceGroup, DeviceCredential } from '../types';
 
 interface DeviceGroupDialogProps {
   open: boolean;
   onClose: () => void;
-  group?: DeviceGroup;
-  credentials: DeviceCredential[];
+  group?: DeviceGroup | null;
+  credentials?: DeviceCredential[];
   onSave: (group: Omit<DeviceGroup, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
@@ -23,14 +24,14 @@ const initialGroupState: Omit<DeviceGroup, 'id' | 'createdAt' | 'updatedAt'> = {
   description: '',
   color: '#1976d2',
   isDefault: false,
-  credentialId: '',
+  credential_id: '',
 };
 
 export const DeviceGroupDialog: React.FC<DeviceGroupDialogProps> = ({
   open,
   onClose,
   group,
-  credentials,
+  credentials = [],
   onSave,
 }) => {
   const [formData, setFormData] = useState(
@@ -40,7 +41,10 @@ export const DeviceGroupDialog: React.FC<DeviceGroupDialogProps> = ({
           description: group.description || '',
           color: group.color || '#1976d2',
           isDefault: group.isDefault || false,
-          credentialId: group.credentialId || '',
+          // Validate credential_id exists in available credentials
+          credential_id: credentials.some(c => c.id === group.credential_id) 
+            ? group.credential_id 
+            : '',
         }
       : initialGroupState
   );
@@ -107,18 +111,17 @@ export const DeviceGroupDialog: React.FC<DeviceGroupDialogProps> = ({
             select
             fullWidth
             label="Default Credential"
-            name="credentialId"
-            value={formData.credentialId}
+            name="credential_id"
+            value={formData.credential_id || ''}
             onChange={handleChange}
-            SelectProps={{
-              native: true,
-            }}
           >
-            <option value="">None</option>
-            {credentials.map((credential) => (
-              <option key={credential.id} value={credential.id}>
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {credentials?.map((credential) => (
+              <MenuItem key={credential.id} value={credential.id}>
                 {credential.name}
-              </option>
+              </MenuItem>
             ))}
           </TextField>
         </div>
@@ -129,9 +132,8 @@ export const DeviceGroupDialog: React.FC<DeviceGroupDialogProps> = ({
           onClick={handleSubmit}
           variant="contained"
           disabled={!formData.name}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
         >
-          Save
+          {group ? 'Save Changes' : 'Add Group'}
         </Button>
       </DialogActions>
     </Dialog>

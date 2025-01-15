@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { CustomTable } from '../components/CustomTable';
 import SiteDialog from '../components/SiteDialog';
+import TableHeader from '../components/TableHeader';
 import {
   Button,
   Card,
@@ -124,55 +125,43 @@ const SitesPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <Typography variant="h5" className="font-semibold mb-1">
-            Sites
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Manage your network sites
-          </Typography>
-        </div>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          Add Site
-        </Button>
-      </div>
-
-      {/* Site Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card 
-          className={`p-4 rounded-xl hover:shadow-md transition-shadow duration-200 ${
-            theme.palette.mode === 'dark' 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border border-gray-200'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <LocationIcon className="text-blue-500" />
-            <Typography variant="h6" className="font-medium">
-              Total Sites
-            </Typography>
-          </div>
-          <Typography variant="h4" className="font-bold text-blue-600">
-            {sites.length}
-          </Typography>
-        </Card>
-      </div>
-
-      <CustomTable<Site>
-        columns={columns}
-        rows={sites}
-        loading={isLoading}
-        actions
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+    <Box sx={{ p: 3 }}>
+      <TableHeader
+        title="Network Sites"
+        subtitle="Manage your network sites and their configurations"
+        stats={[
+          {
+            label: "Total Sites",
+            value: sites.length,
+            color: "primary"
+          },
+          {
+            label: "Active Sites",
+            value: sites.filter(s => s.status === 'active').length,
+            color: "success"
+          }
+        ]}
+        onAdd={handleAdd}
+        addButtonLabel="Add Site"
       />
+
+      <Card
+        sx={{
+          overflow: 'hidden',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+            : '0 4px 20px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <CustomTable<Site>
+          columns={columns}
+          rows={sites}
+          loading={isLoading}
+          actions
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </Card>
 
       {dialogOpen && (
         <SiteDialog
@@ -193,7 +182,7 @@ const SitesPage: React.FC = () => {
           {successMessage}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 

@@ -1,46 +1,34 @@
+import { DeviceCredential } from '../types';
 import api from './api';
 
-export interface DeviceCredentials {
-  id: number;
-  device_id: number;
-  username: string;
-  password: string;
-  ssh_key?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface DeviceCredentialsCreate {
-  device_id: number;
-  username: string;
-  password: string;
-  ssh_key?: string;
-}
-
-export interface DeviceCredentialsUpdate {
-  username?: string;
-  password?: string;
-  ssh_key?: string;
+interface UpdateDeviceCredentialPayload {
+  id: string;
+  data: Partial<DeviceCredential>;
 }
 
 const deviceCredentialsService = {
-  getCredentials: async (deviceId: number): Promise<DeviceCredentials> => {
-    const response = await api.get<DeviceCredentials>(`/api/device-credentials/${deviceId}`);
+  getAll: async (): Promise<DeviceCredential[]> => {
+    const response = await api.get<DeviceCredential[]>('/api/device-credentials');
     return response.data;
   },
 
-  createCredentials: async (credentials: DeviceCredentialsCreate): Promise<DeviceCredentials> => {
-    const response = await api.post<DeviceCredentials>('/api/device-credentials', credentials);
+  getById: async (id: string): Promise<DeviceCredential> => {
+    const response = await api.get<DeviceCredential>(`/api/device-credentials/${id}`);
     return response.data;
   },
 
-  updateCredentials: async (deviceId: number, credentials: DeviceCredentialsUpdate): Promise<DeviceCredentials> => {
-    const response = await api.put<DeviceCredentials>(`/api/device-credentials/${deviceId}`, credentials);
+  create: async (credential: Omit<DeviceCredential, 'id' | 'created_at' | 'updated_at'>): Promise<DeviceCredential> => {
+    const response = await api.post<DeviceCredential>('/api/device-credentials', credential);
     return response.data;
   },
 
-  deleteCredentials: async (deviceId: number): Promise<void> => {
-    await api.delete(`/api/device-credentials/${deviceId}`);
+  update: async ({ id, data }: UpdateDeviceCredentialPayload): Promise<DeviceCredential> => {
+    const response = await api.put<DeviceCredential>(`/api/device-credentials/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/api/device-credentials/${id}`);
   },
 };
 

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Table, JSO
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
+import uuid
 from ..database import Base
 
 class DeviceType(str, enum.Enum):
@@ -44,12 +45,12 @@ class DeviceCredential(Base):
 class DeviceCredentials(Base):
     __tablename__ = "device_credentials_2"
 
-    id = Column(String, primary_key=True)
-    device_id = Column(String, ForeignKey("devices.id"), unique=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    device_id = Column(String, ForeignKey("devices.id"), unique=True, nullable=True)
     name = Column(String, nullable=False)
     username = Column(String)
     password = Column(String)
-    ssh_key = Column(String, nullable=True)
+    ssh_key = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     device = relationship("Device", back_populates="credentials")

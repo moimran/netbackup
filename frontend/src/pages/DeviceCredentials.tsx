@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { CustomTable } from '../components/CustomTable';
 import DeviceCredentialDialog from '../components/DeviceCredentialDialog';
+import TableHeader from '../components/TableHeader';
 import {
   Button,
   Card,
@@ -43,46 +44,45 @@ const DeviceCredentialsPage: React.FC = () => {
     error: credentialsError,
   } = useQuery({
     queryKey: ['deviceCredentials'],
-    queryFn: async () => {
-      if (!devices) return [];
-      const credentialsList = await Promise.all(
-        devices.map(async (device) => {
-          try {
-            return await deviceCredentialsService.getCredentials(device.id);
-          } catch (error) {
-            return null;
-          }
-        })
-      );
-      return credentialsList.filter((cred): cred is DeviceCredential => cred !== null);
-    },
-    enabled: !!devices,
+    queryFn: deviceCredentialsService.getAll,
   });
 
   const createMutation = useMutation({
-    mutationFn: deviceCredentialsService.createCredentials,
+    mutationFn: deviceCredentialsService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deviceCredentials'] });
       setSuccessMessage('Device credentials created successfully');
       handleCloseDialog();
     },
+    onError: (error) => {
+      console.error('Error creating credentials:', error);
+      setSuccessMessage('Error creating credentials. Please try again.');
+    },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<DeviceCredential> }) =>
-      deviceCredentialsService.updateCredentials(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<DeviceCredential> }) =>
+      deviceCredentialsService.update({ id, data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deviceCredentials'] });
       setSuccessMessage('Device credentials updated successfully');
       handleCloseDialog();
     },
+    onError: (error) => {
+      console.error('Error updating credentials:', error);
+      setSuccessMessage('Error updating credentials. Please try again.');
+    },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deviceCredentialsService.deleteCredentials,
+    mutationFn: deviceCredentialsService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deviceCredentials'] });
       setSuccessMessage('Device credentials deleted successfully');
+    },
+    onError: (error) => {
+      console.error('Error deleting credentials:', error);
+      setSuccessMessage('Error deleting credentials. Please try again.');
     },
   });
 
@@ -108,130 +108,72 @@ const DeviceCredentialsPage: React.FC = () => {
   };
 
   const handleSave = async (credentialData: Partial<DeviceCredential>) => {
-    if (selectedCredential) {
-      updateMutation.mutate({
-        id: selectedCredential.id,
-        data: credentialData,
-      });
-    } else {
-      createMutation.mutate(credentialData as DeviceCredential);
+    try {
+      if (selectedCredential) {
+        await updateMutation.mutateAsync({
+          id: selectedCredential.id,
+          data: credentialData,
+        });
+      } else {
+        await createMutation.mutateAsync(credentialData as DeviceCredential);
+      }
+    } catch (error) {
+      console.error('Error saving credentials:', error);
+      setSuccessMessage('Error saving credentials. Please try again.');
     }
   };
 
   const columns: Column<DeviceCredential>[] = [
-    {
-      id: 'name',
-      label: 'Credential Name',
-      minWidth: 170,
-    },
+    { id: 'name', label: 'Name', minWidth: 170 },
     { id: 'username', label: 'Username', minWidth: 130 },
-    {
-      id: 'password',
-      label: 'Password',
-      minWidth: 130,
-      format: () => '••••••••',
-    },
-    {
-      id: 'type',
-      label: 'Type',
-      minWidth: 100,
-      format: (value: string) => (
-        <Chip
-          label={value}
-          color="primary"
-          size="small"
-        />
-      ),
-    },
   ];
 
   if (isLoadingDevices || isLoadingCredentials) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
         <CircularProgress />
       </Box>
     );
   }
 
-  if (credentialsError) {
-    return (
-      <Alert severity="error" sx={{ m: 2 }}>
-        Error loading device credentials. Please try again later.
-      </Alert>
-    );
-  }
-
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <Typography variant="h5" className="font-semibold mb-1">
-            Device Credentials
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Manage device access credentials
-          </Typography>
-        </div>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          Add Credentials
-        </Button>
-      </div>
-
-      {/* Credentials Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card 
-          className={`p-4 rounded-xl hover:shadow-md transition-shadow duration-200 ${
-            theme.palette.mode === 'dark' 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border border-gray-200'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <KeyIcon className="text-blue-500" />
-            <Typography variant="h6" className="font-medium">
-              Total Credentials
-            </Typography>
-          </div>
-          <Typography variant="h4" className="font-bold text-blue-600">
-            {credentials.length}
-          </Typography>
-        </Card>
-      </div>
-
-      <CustomTable<DeviceCredential>
-        columns={columns}
-        rows={credentials}
-        loading={isLoadingCredentials}
-        actions
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-
-      {dialogOpen && (
-        <DeviceCredentialDialog
-          open={dialogOpen}
-          onClose={handleCloseDialog}
-          credential={selectedCredential}
-          onSave={handleSave}
-          devices={devices}
+    <div className="p-4">
+      <Card>
+        <TableHeader
+          title="Device Credentials"
+          onAdd={handleAdd}
+          addButtonText="Add Credentials"
         />
-      )}
+        
+        <CustomTable
+          columns={columns}
+          rows={credentials}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
 
-      <Snackbar
-        open={!!successMessage}
-        autoHideDuration={6000}
-        onClose={() => setSuccessMessage(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={() => setSuccessMessage(null)} severity="success">
-          {successMessage}
-        </Alert>
-      </Snackbar>
+        {dialogOpen && (
+          <DeviceCredentialDialog
+            open={dialogOpen}
+            onClose={handleCloseDialog}
+            onSave={handleSave}
+            credential={selectedCredential}
+          />
+        )}
+
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={6000}
+          onClose={() => setSuccessMessage(null)}
+        >
+          <Alert
+            onClose={() => setSuccessMessage(null)}
+            severity={successMessage?.toLowerCase().includes('error') ? 'error' : 'success'}
+          >
+            {successMessage}
+          </Alert>
+        </Snackbar>
+      </Card>
     </div>
   );
 };

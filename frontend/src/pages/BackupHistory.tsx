@@ -17,6 +17,14 @@ import {
   Visibility as ViewIcon,
 } from '@mui/icons-material'
 import { useState } from 'react'
+import React from 'react';
+import { CustomTable } from '../components/CustomTable';
+import TableHeader from '../components/TableHeader';
+import {
+  Card,
+  useTheme,
+  Box,
+} from '@mui/material';
 
 interface BackupRecord {
   id: number
@@ -64,92 +72,87 @@ const BackupHistory = () => {
     }
   }
 
+  const theme = useTheme();
+
+  const columns = [
+    { field: 'deviceName', headerName: 'Device Name' },
+    { field: 'deviceIp', headerName: 'IP Address' },
+    { field: 'timestamp', headerName: 'Timestamp' },
+    { field: 'status', headerName: 'Status' },
+    { field: 'fileSize', headerName: 'File Size' },
+    { field: 'actions', headerName: 'Actions', sortable: false },
+  ];
+
+  const isLoading = false;
+
   return (
-    <div className="h-full">
-      <Typography variant="h4" gutterBottom>
-        Backup History
-      </Typography>
+    <Box sx={{ p: 3 }}>
+      <TableHeader
+        title="Backup History"
+        subtitle="View and monitor the history of all backup operations"
+        stats={[
+          {
+            label: "Total Backups",
+            value: backups.length,
+            color: "primary"
+          },
+          {
+            label: "Successful",
+            value: backups.filter(b => b.status === 'success').length,
+            color: "success"
+          },
+          {
+            label: "Failed",
+            value: backups.filter(b => b.status === 'failed').length,
+            color: "error"
+          },
+          {
+            label: "In Progress",
+            value: backups.filter(b => b.status === 'in_progress').length,
+            color: "warning"
+          }
+        ]}
+      />
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
-        <TextField
-          select
-          label="Time Period"
-          value={timeFilter}
-          onChange={(e) => setTimeFilter(e.target.value)}
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 150 }}
-        >
-          <MenuItem value="all">All Time</MenuItem>
-          <MenuItem value="today">Today</MenuItem>
-          <MenuItem value="week">This Week</MenuItem>
-          <MenuItem value="month">This Month</MenuItem>
-        </TextField>
-
-        <TextField
-          select
-          label="Status"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 150 }}
-        >
-          <MenuItem value="all">All Status</MenuItem>
-          <MenuItem value="success">Success</MenuItem>
-          <MenuItem value="failed">Failed</MenuItem>
-          <MenuItem value="in_progress">In Progress</MenuItem>
-        </TextField>
-      </div>
-
-      <TableContainer component={Paper} className="w-full shadow-md">
-        <Table stickyHeader size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Device Name</TableCell>
-              <TableCell>IP Address</TableCell>
-              <TableCell>Timestamp</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>File Size</TableCell>
-              <TableCell align="right" width="120">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {backups.map((backup) => (
-              <TableRow key={backup.id}>
-                <TableCell>{backup.deviceName}</TableCell>
-                <TableCell>{backup.deviceIp}</TableCell>
-                <TableCell>{backup.timestamp}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={backup.status}
-                    color={getStatusColor(backup.status) as any}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>{backup.fileSize}</TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-1">
-                    <IconButton color="primary" size="small" title="View Config">
-                      <ViewIcon />
-                    </IconButton>
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      title="Download Backup"
-                      disabled={backup.status.toLowerCase() === 'failed'}
-                    >
-                      <DownloadIcon />
-                    </IconButton>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </div>
+      <Card
+        sx={{
+          overflow: 'hidden',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+            : '0 4px 20px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <CustomTable
+          columns={columns}
+          rows={backups.map((backup) => ({
+            ...backup,
+            actions: (
+              <div className="flex justify-end gap-1">
+                <IconButton color="primary" size="small" title="View Config">
+                  <ViewIcon />
+                </IconButton>
+                <IconButton
+                  color="primary"
+                  size="small"
+                  title="Download Backup"
+                  disabled={backup.status.toLowerCase() === 'failed'}
+                >
+                  <DownloadIcon />
+                </IconButton>
+              </div>
+            ),
+            status: (
+              <Chip
+                label={backup.status}
+                color={getStatusColor(backup.status) as any}
+                size="small"
+              />
+            ),
+          }))}
+          loading={isLoading}
+        />
+      </Card>
+    </Box>
   )
 }
 

@@ -13,6 +13,7 @@ import {
   TablePagination,
   useTheme,
   LinearProgress,
+  Typography,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -172,6 +173,44 @@ export const CustomTable = <T extends { id: string }>({
           ? TABLE_CLASSES.paper.dark
           : TABLE_CLASSES.paper.light
       }`}
+      sx={{
+        '& .MuiTableCell-root': {
+          padding: '16px',
+          fontSize: '0.875rem',
+        },
+        '& .MuiTableCell-head': {
+          fontWeight: 600,
+          backgroundColor: theme.palette.mode === 'dark' 
+            ? 'rgba(255, 255, 255, 0.05)'
+            : 'rgba(0, 0, 0, 0.02)',
+        },
+        '& .MuiTableRow-root': {
+          '&:last-child td': {
+            borderBottom: 0,
+          },
+        },
+        '& .MuiTablePagination-root': {
+          borderTop: `1px solid ${theme.palette.divider}`,
+        },
+        '& .MuiTableContainer-root': {
+          maxHeight: '600px',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+            height: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: theme.palette.mode === 'dark' 
+              ? 'rgba(255, 255, 255, 0.05)'
+              : 'rgba(0, 0, 0, 0.05)',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.2)'
+              : 'rgba(0, 0, 0, 0.2)',
+            borderRadius: '4px',
+          },
+        },
+      }}
     >
       {loading && (
         <LinearProgress 
@@ -183,12 +222,18 @@ export const CustomTable = <T extends { id: string }>({
           }} 
         />
       )}
-      <TableContainer className="max-h-[600px]">
+      <TableContainer>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
               {selectable && (
-                <TableCell padding="checkbox">
+                <TableCell 
+                  padding="checkbox"
+                  sx={{
+                    width: 48,
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
                   <Checkbox
                     indeterminate={selected.length > 0 && selected.length < rows.length}
                     checked={rows.length > 0 && selected.length === rows.length}
@@ -200,21 +245,33 @@ export const CustomTable = <T extends { id: string }>({
                 <TableCell
                   key={column.id.toString()}
                   align={column.align}
-                  style={{ minWidth: column.minWidth }}
-                  className={`font-semibold ${
-                    theme.palette.mode === 'dark' 
-                      ? TABLE_CLASSES.header.dark
-                      : TABLE_CLASSES.header.light
-                  }`}
+                  sx={{
+                    minWidth: column.minWidth,
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                  }}
                 >
-                  {column.label}
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    {column.label}
+                  </Typography>
                 </TableCell>
               ))}
-              {actions && <TableCell align="right" style={{ minWidth: 100 }}>Actions</TableCell>}
+              {actions && (
+                <TableCell 
+                  align="right"
+                  sx={{
+                    width: 100,
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Actions
+                  </Typography>
+                </TableCell>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows
+            {(rows || [])
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => (
                 <TableRowMemo key={row.id} row={row} index={index} />
@@ -225,7 +282,7 @@ export const CustomTable = <T extends { id: string }>({
       <TablePagination
         rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
         component="div"
-        count={rows.length}
+        count={(rows || []).length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

@@ -136,34 +136,107 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <Box className="p-6 space-y-6">
+    <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box className="flex justify-between items-center mb-6">
-        <Box>
-          <Typography variant="h4" className="font-bold">
-            Backup Dashboard
-          </Typography>
-          <Typography color="textSecondary">
-            Monitor your network device backups and system health
-          </Typography>
-        </Box>
+      <Box sx={{ mb: 4 }}>
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            fontWeight: 700,
+            mb: 1,
+            background: theme => theme.palette.mode === 'dark'
+              ? 'linear-gradient(45deg, #60A5FA, #34D399)'
+              : 'linear-gradient(45deg, #2563EB, #059669)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            color: 'transparent',
+          }}
+        >
+          Backup Dashboard
+        </Typography>
+        <Typography 
+          color="textSecondary"
+          sx={{ 
+            fontSize: '1.1rem',
+            maxWidth: 600,
+          }}
+        >
+          Monitor your network device backups and system health
+        </Typography>
       </Box>
 
       {/* Stat Cards */}
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         {statCards.map((stat, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
-            <Card className="p-4">
-              <Box className="flex items-center justify-between mb-2">
-                <Typography variant="subtitle2" color="textSecondary">
+            <Card 
+              sx={{ 
+                p: 3,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                overflow: 'hidden',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  transition: 'transform 0.3s ease-in-out',
+                },
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '4px',
+                  background: (theme) =>
+                    `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography 
+                  variant="subtitle2" 
+                  color="textSecondary"
+                  sx={{ 
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
                   {stat.title}
                 </Typography>
-                {stat.icon}
+                <Box 
+                  sx={{ 
+                    p: 1,
+                    borderRadius: '12px',
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : 'rgba(0, 0, 0, 0.03)',
+                  }}
+                >
+                  {stat.icon}
+                </Box>
               </Box>
-              <Typography variant="h4" className="font-bold mb-1">
+              <Typography 
+                variant="h4" 
+                sx={{ 
+                  fontWeight: 700,
+                  mb: 1,
+                  fontSize: '2rem',
+                }}
+              >
                 {stat.value}
               </Typography>
-              <Typography variant="body2" className={stat.changeColor}>
+              <Typography 
+                variant="body2" 
+                className={stat.changeColor}
+                sx={{ 
+                  mt: 'auto',
+                  fontWeight: 500,
+                }}
+              >
                 {stat.change}
               </Typography>
             </Card>
@@ -172,34 +245,128 @@ const Dashboard: React.FC = () => {
       </Grid>
 
       {/* Recent Activities */}
-      <Card className="p-6">
-        <Typography variant="h6" className="mb-4">
-          RECENT ACTIVITIES
-        </Typography>
-        <TableContainer>
-          <Table>
+      <Card 
+        sx={{ 
+          p: 0,
+          overflow: 'hidden',
+          '& .MuiTableCell-root': {
+            borderColor: theme => theme.palette.divider,
+          },
+        }}
+      >
+        <Box 
+          sx={{ 
+            p: 3,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 600,
+              color: 'text.primary',
+            }}
+          >
+            Recent Activities
+          </Typography>
+        </Box>
+        <TableContainer sx={{ maxHeight: 400 }}>
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>Device</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Message</TableCell>
-                <TableCell>Time</TableCell>
+                <TableCell 
+                  sx={{ 
+                    fontWeight: 600,
+                    backgroundColor: theme =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : 'rgba(0, 0, 0, 0.02)',
+                  }}
+                >
+                  Device
+                </TableCell>
+                <TableCell 
+                  sx={{ 
+                    fontWeight: 600,
+                    backgroundColor: theme =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : 'rgba(0, 0, 0, 0.02)',
+                  }}
+                >
+                  Status
+                </TableCell>
+                <TableCell 
+                  sx={{ 
+                    fontWeight: 600,
+                    backgroundColor: theme =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : 'rgba(0, 0, 0, 0.02)',
+                  }}
+                >
+                  Message
+                </TableCell>
+                <TableCell 
+                  sx={{ 
+                    fontWeight: 600,
+                    backgroundColor: theme =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : 'rgba(0, 0, 0, 0.02)',
+                  }}
+                >
+                  Time
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {stats?.recent_activities?.map((activity) => (
-                <TableRow key={activity.id}>
-                  <TableCell>{activity.device_name}</TableCell>
+                <TableRow 
+                  key={activity.id}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: theme =>
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.05)'
+                          : 'rgba(0, 0, 0, 0.02)',
+                    },
+                  }}
+                >
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <RouterIcon sx={{ color: 'primary.main' }} />
+                      <Typography>{activity.device_name}</Typography>
+                    </Box>
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={activity.status}
                       color={activity.status === 'success' ? 'success' : 'error'}
                       size="small"
+                      sx={{ 
+                        borderRadius: '6px',
+                        fontWeight: 500,
+                      }}
                     />
                   </TableCell>
-                  <TableCell>{activity.message}</TableCell>
                   <TableCell>
-                    {new Date(activity.created_at).toLocaleString()}
+                    <Typography 
+                      sx={{ 
+                        maxWidth: 400,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {activity.message}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography color="textSecondary" sx={{ fontSize: '0.875rem' }}>
+                      {new Date(activity.created_at).toLocaleString()}
+                    </Typography>
                   </TableCell>
                 </TableRow>
               ))}

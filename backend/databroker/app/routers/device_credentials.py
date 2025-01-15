@@ -20,29 +20,39 @@ async def create_device_credentials(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    # Check if device exists
-    device = db.query(Device).filter(Device.id == credentials.device_id).first()
-    if not device:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device not found"
-        )
+    # Only check device if device_id is provided
+    if credentials.device_id:
+        # Check if device exists
+        device = db.query(Device).filter(Device.id == credentials.device_id).first()
+        if not device:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Device not found"
+            )
 
-    # Check if credentials already exist for this device
-    existing_credentials = db.query(DeviceCredentials).filter(
-        DeviceCredentials.device_id == credentials.device_id
-    ).first()
-    if existing_credentials:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Credentials already exist for this device"
-        )
+        # Check if credentials already exist for this device
+        existing_credentials = db.query(DeviceCredentials).filter(
+            DeviceCredentials.device_id == credentials.device_id
+        ).first()
+        if existing_credentials:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Credentials already exist for this device"
+            )
 
     db_credentials = DeviceCredentials(**credentials.dict())
     db.add(db_credentials)
     db.commit()
     db.refresh(db_credentials)
     return db_credentials
+
+@router.get("/", response_model=List[DeviceCredentialsSchema])
+async def get_all_device_credentials(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    credentials = db.query(DeviceCredentials).all()
+    return credentials
 
 @router.get("/{device_id}", response_model=DeviceCredentialsSchema)
 async def get_device_credentials(

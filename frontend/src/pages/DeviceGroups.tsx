@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { CustomTable } from '../components/CustomTable';
 import DeviceGroupDialog from '../components/DeviceGroupDialog';
+import TableHeader from '../components/TableHeader';
 import {
   Button,
   Card,
@@ -52,20 +53,7 @@ const DeviceGroupsPage: React.FC = () => {
     isLoading: isLoadingCredentials,
   } = useQuery({
     queryKey: ['deviceCredentials'],
-    queryFn: async () => {
-      if (!devices) return [];
-      const credentialsList = await Promise.all(
-        devices.map(async (device) => {
-          try {
-            return await deviceCredentialsService.getCredentials(device.id);
-          } catch (error) {
-            return null;
-          }
-        })
-      );
-      return credentialsList.filter((cred): cred is DeviceCredential => cred !== null);
-    },
-    enabled: !!devices,
+    queryFn: deviceCredentialsService.getAll,
   });
 
   const createMutation = useMutation({
@@ -165,55 +153,48 @@ const DeviceGroupsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <Typography variant="h5" className="font-semibold mb-1">
-            Device Groups
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Manage your device groups
-          </Typography>
-        </div>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          Add Group
-        </Button>
-      </div>
-
-      {/* Group Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card 
-          className={`p-4 rounded-xl hover:shadow-md transition-shadow duration-200 ${
-            theme.palette.mode === 'dark' 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border border-gray-200'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <GroupIcon className="text-blue-500" />
-            <Typography variant="h6" className="font-medium">
-              Total Groups
-            </Typography>
-          </div>
-          <Typography variant="h4" className="font-bold text-blue-600">
-            {groups.length}
-          </Typography>
-        </Card>
-      </div>
-
-      <CustomTable<DeviceGroup>
-        columns={columns}
-        rows={groups}
-        loading={isLoadingGroups}
-        actions
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+    <Box sx={{ p: 3 }}>
+      <TableHeader
+        title="Device Groups"
+        subtitle="Organize and manage your network devices in logical groups"
+        stats={[
+          {
+            label: "Total Groups",
+            value: groups.length,
+            color: "primary"
+          },
+          {
+            label: "Active Groups",
+            value: groups.filter(g => g.status === 'active').length,
+            color: "success"
+          },
+          {
+            label: "Total Devices",
+            value: groups.reduce((acc, group) => acc + (group.devices?.length || 0), 0),
+            color: "info"
+          }
+        ]}
+        onAdd={handleAdd}
+        addButtonLabel="Add Group"
       />
+
+      <Card
+        sx={{
+          overflow: 'hidden',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+            : '0 4px 20px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <CustomTable<DeviceGroup>
+          columns={columns}
+          rows={groups}
+          loading={isLoadingGroups}
+          actions
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </Card>
 
       {dialogOpen && (
         <DeviceGroupDialog
@@ -222,6 +203,7 @@ const DeviceGroupsPage: React.FC = () => {
           group={selectedGroup}
           onSave={handleSave}
           devices={devices}
+          credentials={deviceCredentials}
         />
       )}
 
@@ -235,7 +217,7 @@ const DeviceGroupsPage: React.FC = () => {
           {successMessage}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 

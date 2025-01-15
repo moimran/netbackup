@@ -7,7 +7,6 @@ import {
   Drawer,
   IconButton,
   List,
-  ListItem,
   ListItemIcon,
   ListItemText,
   Toolbar,
@@ -15,29 +14,40 @@ import {
   Avatar,
   Menu,
   MenuItem,
-  Divider,
   ListItemButton,
   Tooltip,
+  styled,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
-  Dashboard as DashboardIcon,
-  Router as DevicesIcon,
-  Group as DeviceGroupsIcon,
-  VpnKey as CredentialsIcon,
-  LocationOn as SitesIcon,
-  Place as LocationsIcon,
-  History as BackupHistoryIcon,
+  SpeedOutlined as DashboardIcon,
+  StorageOutlined as DevicesIcon,
+  DeviceHubOutlined as DeviceGroupsIcon,
+  VpnKeyOutlined as CredentialsIcon,
+  BusinessOutlined as SitesIcon,
+  LocationOnOutlined as LocationsIcon,
+  BackupOutlined as BackupHistoryIcon,
+  AdminPanelSettingsOutlined as AdminIcon,
   AccountCircle,
   Brightness4,
   Brightness7,
-  AdminPanelSettings as AdminIcon,
+  ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeContext } from '../theme/ThemeContext';
+import reactLogo from '../assets/react.svg';
 
 const drawerWidth = 280;
+const collapsedDrawerWidth = 72;
+
+const DrawerHeader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  padding: theme.spacing(2),
+  justifyContent: 'space-between',
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
 
 interface NavItem {
   path: string;
@@ -84,62 +94,92 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ 
-        p: 2, 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        borderBottom: '1px solid',
-        borderColor: 'divider'
-      }}>
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          NetBackup
-        </Typography>
-        <IconButton onClick={handleDrawerToggle}>
-          <ChevronLeftIcon />
-        </IconButton>
-      </Box>
-      <List sx={{ flexGrow: 1, pt: 2 }}>
+      <DrawerHeader>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1,
+          overflow: 'hidden',
+        }}>
+          <Box
+            component="img"
+            src={reactLogo}
+            alt="NetBackup"
+            sx={{
+              height: 32,
+              width: 32,
+              objectFit: 'contain',
+              animation: 'spin 20s linear infinite',
+              '@keyframes spin': {
+                from: {
+                  transform: 'rotate(0deg)',
+                },
+                to: {
+                  transform: 'rotate(360deg)',
+                },
+              },
+            }}
+          />
+          {isDrawerOpen && (
+            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
+              NetBackup
+            </Typography>
+          )}
+        </Box>
+      </DrawerHeader>
+      <List sx={{ flexGrow: 1, pt: 2, px: 1 }}>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <ListItemButton
+            <Tooltip
               key={item.path}
-              onClick={() => navigate(item.path)}
-              selected={isActive}
-              sx={{
-                mx: 1,
-                borderRadius: 1,
-                mb: 0.5,
-                '&.Mui-selected': {
-                  backgroundColor: 'primary.main',
-                  color: 'primary.contrastText',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark',
-                  },
-                  '& .MuiListItemIcon-root': {
-                    color: 'inherit',
-                  },
-                },
-              }}
+              title={!isDrawerOpen ? item.label : ''}
+              placement="right"
             >
-              <ListItemIcon
+              <ListItemButton
+                onClick={() => navigate(item.path)}
+                selected={isActive}
                 sx={{
-                  minWidth: 40,
-                  color: isActive ? 'inherit' : 'text.secondary',
+                  minHeight: 48,
+                  px: 2.5,
+                  borderRadius: 2,
+                  mb: 0.5,
+                  justifyContent: isDrawerOpen ? 'initial' : 'center',
+                  '&.Mui-selected': {
+                    backgroundColor: 'primary.main',
+                    color: 'primary.contrastText',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: 'inherit',
+                    },
+                  },
                 }}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.label}
-                sx={{
-                  '& .MuiTypography-root': {
-                    fontWeight: isActive ? 600 : 400,
-                  },
-                }}
-              />
-            </ListItemButton>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: isDrawerOpen ? 2 : 'auto',
+                    justifyContent: 'center',
+                    color: isActive ? 'inherit' : 'text.secondary',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                {isDrawerOpen && (
+                  <ListItemText 
+                    primary={item.label}
+                    sx={{
+                      opacity: 1,
+                      '& .MuiTypography-root': {
+                        fontWeight: isActive ? 600 : 400,
+                      },
+                    }}
+                  />
+                )}
+              </ListItemButton>
+            </Tooltip>
           );
         })}
       </List>
@@ -156,6 +196,13 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           color: 'text.primary',
           boxShadow: 1,
           zIndex: (theme) => theme.zIndex.drawer + 1,
+          width: `calc(100% - ${isDrawerOpen ? drawerWidth : collapsedDrawerWidth}px)`,
+          ml: `${isDrawerOpen ? drawerWidth : collapsedDrawerWidth}px`,
+          transition: (theme) =>
+            theme.transitions.create(['width', 'margin'], {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.leavingScreen,
+            }),
         }}
       >
         <Toolbar>
@@ -164,9 +211,16 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             aria-label="toggle drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, ...(isDrawerOpen && { display: 'none' }) }}
+            sx={{ 
+              mr: 2,
+              color: 'primary.main',
+              bgcolor: 'action.hover',
+              '&:hover': {
+                bgcolor: 'action.selected',
+              },
+            }}
           >
-            <MenuIcon />
+            {isDrawerOpen ? <ChevronLeftIcon /> : <MenuIcon />}
           </IconButton>
           <Box sx={{ flexGrow: 1 }} />
           <IconButton onClick={toggleColorMode} color="inherit">
@@ -202,16 +256,17 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <Drawer
         variant="permanent"
         sx={{
-          width: drawerWidth,
+          width: isDrawerOpen ? drawerWidth : collapsedDrawerWidth,
           flexShrink: 0,
-          [`& .MuiDrawer-paper`]: {
-            width: drawerWidth,
+          '& .MuiDrawer-paper': {
+            width: isDrawerOpen ? drawerWidth : collapsedDrawerWidth,
             boxSizing: 'border-box',
-            backgroundColor: 'background.paper',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-            transform: isDrawerOpen ? 'none' : `translateX(-${drawerWidth}px)`,
-            transition: 'transform 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
+            transition: (theme) =>
+              theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+            overflowX: 'hidden',
           },
         }}
       >
@@ -222,9 +277,12 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: `calc(100% - ${isDrawerOpen ? drawerWidth : 0}px)`,
-          marginLeft: isDrawerOpen ? 0 : `-${drawerWidth}px`,
-          transition: 'margin-left 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
+          width: `calc(100% - ${isDrawerOpen ? drawerWidth : collapsedDrawerWidth}px)`,
+          transition: (theme) =>
+            theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
           mt: 8,
         }}
       >

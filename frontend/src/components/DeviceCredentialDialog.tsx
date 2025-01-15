@@ -35,7 +35,6 @@ const DeviceCredentialDialog: React.FC<DeviceCredentialDialogProps> = ({
     username: '',
     password: '',
     ssh_key: '',
-    device_id: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +47,6 @@ const DeviceCredentialDialog: React.FC<DeviceCredentialDialogProps> = ({
         username: credential.username,
         password: credential.password,
         ssh_key: credential.ssh_key || '',
-        device_id: credential.device_id,
       });
     } else {
       setFormData({
@@ -56,7 +54,6 @@ const DeviceCredentialDialog: React.FC<DeviceCredentialDialogProps> = ({
         username: '',
         password: '',
         ssh_key: '',
-        device_id: '',
       });
     }
   }, [credential]);
@@ -83,7 +80,7 @@ const DeviceCredentialDialog: React.FC<DeviceCredentialDialogProps> = ({
     }
   };
 
-  const isValid = formData.name && formData.username && formData.password && formData.device_id;
+  const isValid = formData.name && formData.username && formData.password;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -144,15 +141,6 @@ const DeviceCredentialDialog: React.FC<DeviceCredentialDialogProps> = ({
             fullWidth
             multiline
             rows={4}
-          />
-          
-          <TextField
-            label="Device ID"
-            name="device_id"
-            value={formData.device_id}
-            onChange={handleChange}
-            fullWidth
-            required
           />
         </div>
       </DialogContent>
