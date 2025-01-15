@@ -137,44 +137,69 @@ const DeviceCredentialsPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4">
-      <Card>
-        <TableHeader
-          title="Device Credentials"
-          onAdd={handleAdd}
-          addButtonText="Add Credentials"
-        />
-        
-        <CustomTable
+    <Box sx={{ p: 3 }}>
+      <TableHeader
+        title="Device Credentials"
+        subtitle="Manage authentication credentials for your network devices"
+        stats={[
+          {
+            label: "Total Credentials",
+            value: credentials.length,
+            color: "primary"
+          },
+          {
+            label: "Assigned",
+            value: credentials.filter(c => c.device_id).length,
+            color: "success"
+          },
+          {
+            label: "Unassigned",
+            value: credentials.filter(c => !c.device_id).length,
+            color: "warning"
+          }
+        ]}
+        onAdd={handleAdd}
+        addButtonLabel="Add Credentials"
+      />
+
+      <Card
+        sx={{
+          overflow: 'hidden',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+            : '0 4px 20px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <CustomTable<DeviceCredential>
           columns={columns}
           rows={credentials}
+          loading={isLoadingCredentials}
+          actions
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-
-        {dialogOpen && (
-          <DeviceCredentialDialog
-            open={dialogOpen}
-            onClose={handleCloseDialog}
-            onSave={handleSave}
-            credential={selectedCredential}
-          />
-        )}
-
-        <Snackbar
-          open={!!successMessage}
-          autoHideDuration={6000}
-          onClose={() => setSuccessMessage(null)}
-        >
-          <Alert
-            onClose={() => setSuccessMessage(null)}
-            severity={successMessage?.toLowerCase().includes('error') ? 'error' : 'success'}
-          >
-            {successMessage}
-          </Alert>
-        </Snackbar>
       </Card>
-    </div>
+
+      {dialogOpen && (
+        <DeviceCredentialDialog
+          open={dialogOpen}
+          onClose={handleCloseDialog}
+          onSave={handleSave}
+          credential={selectedCredential}
+        />
+      )}
+
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccessMessage(null)} severity={successMessage?.toLowerCase().includes('error') ? 'error' : 'success'}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

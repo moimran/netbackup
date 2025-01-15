@@ -174,15 +174,22 @@ export const CustomTable = <T extends { id: string }>({
           : TABLE_CLASSES.paper.light
       }`}
       sx={{
+        position: 'relative',
+        height: 'calc(100vh - 240px)',
+        display: 'flex',
+        flexDirection: 'column',
         '& .MuiTableCell-root': {
           padding: '16px',
           fontSize: '0.875rem',
         },
         '& .MuiTableCell-head': {
           fontWeight: 600,
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? 'rgba(255, 255, 255, 0.05)'
-            : 'rgba(0, 0, 0, 0.02)',
+          backgroundColor: theme.palette.mode === 'dark'
+            ? theme.palette.grey[900]
+            : theme.palette.grey[50],
+          position: 'sticky',
+          top: 0,
+          zIndex: 2,
         },
         '& .MuiTableRow-root': {
           '&:last-child td': {
@@ -191,9 +198,34 @@ export const CustomTable = <T extends { id: string }>({
         },
         '& .MuiTablePagination-root': {
           borderTop: `1px solid ${theme.palette.divider}`,
+          backgroundColor: theme.palette.mode === 'dark'
+            ? theme.palette.grey[900]
+            : theme.palette.grey[50],
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 2,
         },
-        '& .MuiTableContainer-root': {
-          maxHeight: '600px',
+      }}
+    >
+      {loading && (
+        <LinearProgress 
+          className="rounded-t-xl" 
+          sx={{ 
+            '& .MuiLinearProgress-bar': {
+              transition: 'transform 0.5s ease-in-out',
+            },
+          }} 
+        />
+      )}
+      <TableContainer
+        sx={{
+          flexGrow: 1,
+          height: '100%',
+          overflow: 'auto',
+          scrollbarWidth: 'thin',
+          scrollbarColor: theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
+            : 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05)',
           '&::-webkit-scrollbar': {
             width: '8px',
             height: '8px',
@@ -209,29 +241,28 @@ export const CustomTable = <T extends { id: string }>({
               : 'rgba(0, 0, 0, 0.2)',
             borderRadius: '4px',
           },
-        },
-      }}
-    >
-      {loading && (
-        <LinearProgress 
-          className="rounded-t-xl" 
-          sx={{ 
-            '& .MuiLinearProgress-bar': {
-              transition: 'transform 0.5s ease-in-out',
-            },
-          }} 
-        />
-      )}
-      <TableContainer>
+        }}
+      >
         <Table stickyHeader>
-          <TableHead>
+          <TableHead
+            sx={{
+              '& .MuiTableCell-head': {
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? theme.palette.grey[900]
+                  : theme.palette.grey[50],
+                borderBottom: `1px solid ${theme.palette.divider}`,
+              },
+            }}
+          >
             <TableRow>
               {selectable && (
                 <TableCell 
                   padding="checkbox"
                   sx={{
                     width: 48,
-                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    backgroundColor: theme.palette.mode === 'dark'
+                      ? theme.palette.grey[900]
+                      : theme.palette.grey[50],
                   }}
                 >
                   <Checkbox
@@ -247,7 +278,9 @@ export const CustomTable = <T extends { id: string }>({
                   align={column.align}
                   sx={{
                     minWidth: column.minWidth,
-                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    backgroundColor: theme.palette.mode === 'dark'
+                      ? theme.palette.grey[900]
+                      : theme.palette.grey[50],
                   }}
                 >
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -260,7 +293,9 @@ export const CustomTable = <T extends { id: string }>({
                   align="right"
                   sx={{
                     width: 100,
-                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    backgroundColor: theme.palette.mode === 'dark'
+                      ? theme.palette.grey[900]
+                      : theme.palette.grey[50],
                   }}
                 >
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
